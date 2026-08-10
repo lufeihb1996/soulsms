@@ -50,6 +50,7 @@ export function providerError(error: unknown) {
     missing_api_key: "Grizzly SMS 尚未配置，请联系卖家",
     missing_service_code: "未找到 SoulAPP 服务代码，请联系卖家检查 Grizzly SMS 配置",
     service_unavailable_region: "Grizzly SMS 暂不允许当前区域访问",
+    early_cancel_denied: "Grizzly SMS 暂不允许释放此号码，倒计时已自动顺延",
     no_activation: "原号码订单已失效，请刷新页面或联系卖家",
     request_not_found: "原号码订单已失效，请刷新页面或联系卖家",
     wrong_request: "原号码已由 Grizzly SMS 自动释放，请重新获取号码",

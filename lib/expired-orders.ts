@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { getSms, markOrderUsed, rejectOrder } from "@/lib/grizzly";
+import { getSms, GrizzlyError, markOrderUsed, rejectOrder } from "@/lib/grizzly";
 
 export interface ExpirableOrder {
   id: string;
@@ -8,6 +8,20 @@ export interface ExpirableOrder {
 }
 
 export type ExpiryResult = "waiting" | "received" | "replacement_pending" | "expired" | "unchanged";
+
+function isEarlyCancelDenied(error: unknown) {
+  return error instanceof GrizzlyError && error.code === "early_cancel_denied";
+}
+
+async function deferRelease(orderId: string) {
+  const retryAt = new Date(Date.now() + 60_000).toISOString();
+  const { error } = await getSupabaseAdmin()
+    .from("sms_orders")
+    .update({ can_swap_at: retryAt, expires_at: retryAt, updated_at: new Date().toISOString() })
+    .eq("id", orderId)
+    .eq("status", "waiting");
+  if (error) throw error;
+}
 
 export async function checkAndReleaseOrder(order: ExpirableOrder): Promise<ExpiryResult> {
   const supabase = getSupabaseAdmin();
@@ -40,6 +54,10 @@ export async function checkAndReleaseOrder(order: ExpirableOrder): Promise<Expir
         p_status: "waiting",
         p_refund_swap: true,
       });
+      if (isEarlyCancelDenied(error)) {
+        await deferRelease(order.id);
+        return "waiting";
+      }
       throw error;
     }
 
@@ -72,6 +90,10 @@ export async function checkAndReleaseOrder(order: ExpirableOrder): Promise<Expir
       .update({ status: "waiting", updated_at: new Date().toISOString() })
       .eq("id", order.id)
       .eq("status", "swapping");
+    if (isEarlyCancelDenied(error)) {
+      await deferRelease(order.id);
+      return "waiting";
+    }
     throw error;
   }
 

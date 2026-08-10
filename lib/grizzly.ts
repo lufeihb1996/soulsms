@@ -38,6 +38,7 @@ const ERROR_CODES = new Set([
   "SERVICE_UNAVAILABLE_REGION",
   "WRONG_MAX_PRICE",
   "ERROR_SQL",
+  "EARLY_CANCEL_DENIED",
 ]);
 
 function normalizeErrorCode(value: string) {

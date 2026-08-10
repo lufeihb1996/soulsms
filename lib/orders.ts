@@ -67,7 +67,7 @@ export async function findOrder(sessionId: string, orderId: string): Promise<Sto
 }
 
 export function orderTimes() {
-  const defaultSeconds = 180;
+  const defaultSeconds = 300;
   const configuredSwap = Number(
     process.env.GRIZZLY_SWAP_WAIT_SECONDS ||
     process.env.SMS_SWAP_WAIT_SECONDS ||

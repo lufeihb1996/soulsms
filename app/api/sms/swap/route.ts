@@ -6,6 +6,7 @@ import {
   cancelOrder,
   getNumber,
   getSms,
+  GrizzlyError,
   grizzlyApplication,
   isGrizzlyApplication,
   markOrderUsed,
@@ -121,6 +122,14 @@ export async function POST(req: NextRequest) {
         p_status: "waiting",
         p_refund_swap: true,
       });
+      if (error instanceof GrizzlyError && error.code === "early_cancel_denied") {
+        const retryAt = new Date(Date.now() + 60_000).toISOString();
+        await getSupabaseAdmin()
+          .from("sms_orders")
+          .update({ can_swap_at: retryAt, expires_at: retryAt, updated_at: new Date().toISOString() })
+          .eq("id", order.id)
+          .eq("status", "waiting");
+      }
       throw error;
     }
 
