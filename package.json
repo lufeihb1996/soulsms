@@ -1,8 +1,8 @@
 {
-  "name": "openai-sms-man",
+  "name": "soulsms",
   "version": "1.0.0",
   "private": true,
-  "description": "面向终端用户的美国号码自动收码与订单追踪工具",
+  "description": "面向终端用户的 SoulAPP 香港号码自动收码与订单追踪工具",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

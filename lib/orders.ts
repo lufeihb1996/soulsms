@@ -31,7 +31,7 @@ export interface PublicOrder {
 export function publicOrder(order: StoredOrder): PublicOrder {
   return {
     id: order.id,
-    service: order.service || "chatgpt",
+    service: order.service || "soulapp",
     number: order.phone,
     status: order.status,
     code: order.sms_code || undefined,
@@ -66,18 +66,16 @@ export async function findOrder(sessionId: string, orderId: string): Promise<Sto
   return data as StoredOrder | null;
 }
 
-export function orderTimes(service = "chatgpt") {
-  const isSoulApp = service.toLowerCase() === "soulapp";
-  const suffix = isSoulApp ? "SOULAPP" : "CHATGPT";
-  const defaultSeconds = isSoulApp ? 600 : 180;
+export function orderTimes() {
+  const defaultSeconds = 600;
   const configuredSwap = Number(
-    process.env[`SMS_SWAP_WAIT_SECONDS_${suffix}`] ||
+    process.env.GRIZZLY_SWAP_WAIT_SECONDS ||
     process.env.SMS_SWAP_WAIT_SECONDS ||
     defaultSeconds
   );
   const swapSeconds = Math.max(60, Number.isFinite(configuredSwap) ? configuredSwap : defaultSeconds);
   const configuredTtl = Number(
-    process.env[`SMS_ORDER_TTL_SECONDS_${suffix}`] ||
+    process.env.GRIZZLY_ORDER_TTL_SECONDS ||
     process.env.SMS_ORDER_TTL_SECONDS ||
     swapSeconds
   );

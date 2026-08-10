@@ -1,15 +1,8 @@
 export const SMS_SERVICE_OPTIONS = [
   {
-    id: "chatgpt",
-    label: "ChatGPT",
-    description: "OpenAI / ChatGPT",
-    applicationId: "2754",
-  },
-  {
     id: "soulapp",
     label: "SoulAPP",
-    description: "Soul 社交平台",
-    applicationId: "3119",
+    description: "香港号码",
   },
 ] as const;
 

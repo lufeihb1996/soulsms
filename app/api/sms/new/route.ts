@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, publicAccess } from "@/lib/auth";
-import { allowRequest, apiError, asString, providerError } from "@/lib/http";
+import { allowRequest, apiError, providerError } from "@/lib/http";
 import { latestOrder, orderTimes, publicOrder, type StoredOrder } from "@/lib/orders";
-import { defaultSmsService, findSmsService } from "@/lib/services";
-import { cancelOrder, getNumber } from "@/lib/smsman";
+import { cancelOrder, getNumber, grizzlyApplication, isGrizzlyApplication } from "@/lib/grizzly";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -16,19 +15,17 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return apiError("请先输入闲鱼订单卡密", 401, "unauthorized");
 
-  let body: { service?: unknown } = {};
   try {
-    body = await req.json();
-  } catch {
-    // 兼容未传请求体的旧客户端，默认使用 ChatGPT。
-  }
-  const requestedService = body.service === undefined
-    ? defaultSmsService()
-    : findSmsService(asString(body.service, 32));
-  if (!requestedService) return apiError("暂不支持这个接码服务", 400, "unsupported_service");
-
-  try {
-    const previous = await latestOrder(session.id);
+    let previous = await latestOrder(session.id);
+    if (previous && !isGrizzlyApplication(previous.application_id) &&
+      ["waiting", "swapping", "replacement_pending"].includes(previous.status)) {
+      await getSupabaseAdmin()
+        .from("sms_orders")
+        .update({ status: "closed", updated_at: new Date().toISOString() })
+        .eq("id", previous.id)
+        .eq("session_id", session.id);
+      previous = await latestOrder(session.id);
+    }
     if (previous && ["waiting", "received", "swapping", "replacement_pending"].includes(previous.status)) {
       return NextResponse.json({
         ok: true,
@@ -56,18 +53,15 @@ export async function POST(req: NextRequest) {
         .eq("session_id", session.id);
     }
 
-    const purchased = await getNumber({
-      service: requestedService.description,
-      applicationId: requestedService.applicationId,
-    });
-    const times = orderTimes(requestedService.id);
+    const purchased = await getNumber();
+    const times = orderTimes();
     const { data, error } = await getSupabaseAdmin()
       .from("sms_orders")
       .insert({
         session_id: session.id,
         provider_request_id: purchased.id,
-        service: requestedService.id,
-        application_id: requestedService.applicationId,
+        service: "soulapp",
+        application_id: grizzlyApplication(purchased.providerService),
         phone: purchased.number,
         cost: purchased.cost || "0",
         status: "waiting",

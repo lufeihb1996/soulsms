@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "验证码助手",
     short_name: "验证码助手",
-    description: "美国号码自动收码与订单追踪",
+    description: "SoulAPP 香港号码自动收码与订单追踪",
     start_url: "/",
     scope: "/",
     display: "standalone",

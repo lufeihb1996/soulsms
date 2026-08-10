@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { SmsmanError } from "@/lib/smsman";
+import { GrizzlyError } from "@/lib/grizzly";
 
 export function clientKey(req: NextRequest, scope: string): string {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -33,23 +33,26 @@ export function apiError(message: string, status = 400, code = "request_error") 
 }
 
 export function providerError(error: unknown) {
-  const code = error instanceof SmsmanError ? error.code : "provider_error";
-  console.error("SMS-Man request failed", {
+  const code = error instanceof GrizzlyError ? error.code : "provider_error";
+  console.error("Grizzly SMS request failed", {
     code,
     message: error instanceof Error ? error.message : "Unknown provider error",
   });
   const friendly: Record<string, string> = {
-    no_numbers: "当前美国号码库存紧张，请稍后重试",
+    no_numbers: "当前 SoulAPP 香港号码库存紧张，请稍后重试",
     no_balance: "服务暂时不可用，请联系卖家处理",
     low_balance: "服务暂时不可用，请联系卖家处理",
     wrong_max_price: "当前通道价格发生变化，请联系卖家处理",
     wait_sms: "验证码仍在路上，请继续等待",
     timeout: "号码通道响应超时，请稍后重试",
-    early_cancel_denied: "SMS-Man 尚未允许释放此号码，请稍后再试",
-    early_reject_denied: "SMS-Man 尚未允许释放此号码，请稍后再试",
+    bad_key: "Grizzly SMS API Key 配置错误，请联系卖家",
+    bad_service: "Grizzly SMS 的 SoulAPP 服务代码配置错误",
+    missing_api_key: "Grizzly SMS 尚未配置，请联系卖家",
+    missing_service_code: "未找到 SoulAPP 服务代码，请联系卖家检查 Grizzly SMS 配置",
+    service_unavailable_region: "Grizzly SMS 暂不允许当前区域访问",
     no_activation: "原号码订单已失效，请刷新页面或联系卖家",
     request_not_found: "原号码订单已失效，请刷新页面或联系卖家",
-    wrong_request: "原号码已由 SMS-Man 自动释放，请重新获取号码",
+    wrong_request: "原号码已由 Grizzly SMS 自动释放，请重新获取号码",
   };
 
   return apiError(friendly[code] || "号码通道暂时繁忙，请稍后重试", 502, code);

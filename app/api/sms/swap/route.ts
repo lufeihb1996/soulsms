@@ -2,25 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession, publicAccess } from "@/lib/auth";
 import { allowRequest, apiError, asString, providerError } from "@/lib/http";
 import { findOrder, orderTimes, publicOrder, type StoredOrder } from "@/lib/orders";
-import { cancelOrder, getNumber, getSms, markOrderUsed, rejectOrder } from "@/lib/smsman";
+import {
+  cancelOrder,
+  getNumber,
+  getSms,
+  grizzlyApplication,
+  isGrizzlyApplication,
+  markOrderUsed,
+  rejectOrder,
+} from "@/lib/grizzly";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 
 async function buyReplacement(sessionId: string, oldOrder: StoredOrder) {
-  const purchased = await getNumber({
-    service: oldOrder.service,
-    applicationId: oldOrder.application_id,
-  });
-  const times = orderTimes(oldOrder.service);
+  const purchased = await getNumber();
+  const times = orderTimes();
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("sms_orders")
     .insert({
       session_id: sessionId,
       provider_request_id: purchased.id,
-      service: oldOrder.service,
-      application_id: oldOrder.application_id,
+      service: "soulapp",
+      application_id: grizzlyApplication(purchased.providerService),
       phone: purchased.number,
       cost: purchased.cost || "0",
       status: "waiting",
@@ -64,6 +69,9 @@ export async function POST(req: NextRequest) {
   try {
     const order = await findOrder(session.id, id);
     if (!order) return apiError("没有找到这个订单", 404, "order_not_found");
+    if (!isGrizzlyApplication(order.application_id)) {
+      return apiError("这是旧平台订单，请结束后重新获取香港号码", 409, "legacy_provider_order");
+    }
 
     if (order.status === "replacement_pending") {
       const replacement = await buyReplacement(session.id, order);

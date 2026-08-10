@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { clearSessionCookie, getSession, publicAccess } from "@/lib/auth";
 import { latestOrder, publicOrder } from "@/lib/orders";
+import { isGrizzlyApplication } from "@/lib/grizzly";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export async function GET() {
       ok: true,
       authenticated: true,
       access: publicAccess(session),
-      order: order ? publicOrder(order) : null,
+      order: order && isGrizzlyApplication(order.application_id) ? publicOrder(order) : null,
     });
   } catch {
     return NextResponse.json(

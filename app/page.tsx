@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { SMS_SERVICE_OPTIONS, type SmsServiceKey } from "@/lib/services";
+import type { SmsServiceKey } from "@/lib/services";
 
 interface AccessInfo {
   isAdmin: boolean;
@@ -69,8 +69,11 @@ function formatTime(seconds: number) {
 
 function formatPhone(number: string) {
   const digits = number.replace(/\D/g, "");
-  if (digits.length === 11 && digits.startsWith("1")) {
-    return `+1 ${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+  if (digits.length === 11 && digits.startsWith("852")) {
+    return `+852 ${digits.slice(3, 7)} ${digits.slice(7)}`;
+  }
+  if (digits.length === 8) {
+    return `+852 ${digits.slice(0, 4)} ${digits.slice(4)}`;
   }
   return number.startsWith("+") ? number : `+${number}`;
 }
@@ -81,7 +84,6 @@ export default function Home() {
   const [accessCode, setAccessCode] = useState("");
   const [access, setAccess] = useState<AccessInfo | null>(null);
   const [order, setOrder] = useState<OrderInfo | null>(null);
-  const [selectedService, setSelectedService] = useState<SmsServiceKey>("chatgpt");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
@@ -103,7 +105,6 @@ export default function Home() {
     }
     if (payload.order !== undefined) {
       setOrder(payload.order);
-      if (payload.order?.service) setSelectedService(payload.order.service);
     }
   }, []);
 
@@ -198,8 +199,6 @@ export default function Home() {
     try {
       const payload = await requestJson("/api/sms/new", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ service: selectedService }),
       });
       applyPayload(payload);
     } catch (reason) {
@@ -227,7 +226,7 @@ export default function Home() {
     }
   }
 
-  async function switchService() {
+  async function endOrder() {
     if (!order || !access?.isAdmin) return;
     setBusy(true);
     setError("");
@@ -330,7 +329,7 @@ export default function Home() {
 
       <section className="hero-grid">
         <div className="hero-copy">
-          <div className="eyebrow"><span /> 美国号码 · 自动收码</div>
+          <div className="eyebrow"><span /> 香港号码 · SoulAPP 自动收码</div>
           <h1>验证码到了，<br /><em>第一时间告诉你。</em></h1>
           <p className="hero-lead">
             获取号码、等待短信、复制验证码，一页完成。无需重复刷新，系统会自动查询。
@@ -339,7 +338,7 @@ export default function Home() {
           <div className="trust-row" aria-label="服务特点">
             <div><b>8 秒</b><span>自动查询</span></div>
             <div>
-              <b>{(order?.service || selectedService) === "soulapp" ? "10 分钟" : "3 分钟"}</b>
+              <b>10 分钟</b>
               <span>未收码可换号</span>
             </div>
             <div><b>全程</b><span>订单可追踪</span></div>
@@ -347,7 +346,7 @@ export default function Home() {
 
           <div className="how-it-works">
             <div><span>01</span><p><b>输入服务卡密</b><small>使用闲鱼卖家发给你的卡密</small></p></div>
-            <div><span>02</span><p><b>复制美国号码</b><small>前往目标平台提交验证码请求</small></p></div>
+            <div><span>02</span><p><b>复制香港号码</b><small>前往 SoulAPP 提交验证码请求</small></p></div>
             <div><span>03</span><p><b>等待自动收码</b><small>验证码出现后点击即可复制</small></p></div>
           </div>
         </div>
@@ -501,35 +500,16 @@ export default function Home() {
               </div>
             ) : !order ? (
               <div className="empty-state">
-                <div className="service-picker" role="radiogroup" aria-label="选择接码服务">
-                  <span>选择接码服务</span>
-                  <div>
-                    {SMS_SERVICE_OPTIONS.map((service) => (
-                      <button
-                        type="button"
-                        role="radio"
-                        aria-checked={selectedService === service.id}
-                        className={selectedService === service.id ? "service-option active" : "service-option"}
-                        onClick={() => setSelectedService(service.id)}
-                        disabled={busy}
-                        key={service.id}
-                      >
-                        <b>{service.label}</b>
-                        <small>{service.description}</small>
-                      </button>
-                    ))}
-                  </div>
-                </div>
                 <div className="channel-card">
-                  <div className="flag-badge">US</div>
+                  <div className="flag-badge">HK</div>
                   <div>
-                    <b>美国验证号码</b>
-                    <span>用于 {SMS_SERVICE_OPTIONS.find((service) => service.id === selectedService)?.label}</span>
+                    <b>香港验证号码</b>
+                    <span>仅用于 SoulAPP</span>
                   </div>
                   <span className="stock"><i /> 通道正常</span>
                 </div>
                 <button className="primary-button" onClick={acquireNumber} disabled={busy || !access?.remainingSuccesses}>
-                  {busy ? "正在分配号码…" : "获取美国号码"}
+                  {busy ? "正在分配号码…" : "获取香港号码"}
                 </button>
                 <p className="form-hint">获取后请尽快在目标平台发送验证码。</p>
               </div>
@@ -552,7 +532,7 @@ export default function Home() {
 
                 <div className="number-panel">
                   <span>
-                    {SMS_SERVICE_OPTIONS.find((service) => service.id === order.service)?.label || "当前服务"} · 你的美国号码
+                    SoulAPP · 你的香港号码
                   </span>
                   <div>
                     <strong>{formatPhone(order.number)}</strong>
@@ -613,8 +593,8 @@ export default function Home() {
                 )}
 
                 {access?.isAdmin && ["waiting", "replacement_pending"].includes(order.status) && (
-                  <button className="service-switch-button" onClick={switchService} disabled={busy}>
-                    {busy ? "正在结束当前订单…" : "结束当前订单并切换服务"}
+                  <button className="service-switch-button" onClick={endOrder} disabled={busy}>
+                    {busy ? "正在结束当前订单…" : "结束当前订单"}
                   </button>
                 )}
 

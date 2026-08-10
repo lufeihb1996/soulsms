@@ -10,8 +10,8 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   applicationName: "验证码助手",
-  title: "验证码助手｜美国号码自动收码",
-  description: "获取美国验证号码，自动查询短信验证码，支持超时换号与订单追踪。",
+  title: "验证码助手｜SoulAPP 香港号码自动收码",
+  description: "获取 SoulAPP 香港验证号码，自动查询短信验证码，支持超时换号与订单追踪。",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
@@ -29,14 +29,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
   openGraph: {
     title: "验证码助手",
-    description: "美国号码 · 自动收码",
+    description: "SoulAPP · 香港号码自动收码",
     images: [{ url: "/og.png", width: 1733, height: 909, alt: "验证码助手" }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "验证码助手",
-    description: "美国号码 · 自动收码",
+    description: "SoulAPP · 香港号码自动收码",
     images: ["/og.png"],
   },
 };

@@ -1,6 +1,6 @@
 # 验证码助手
 
-面向终端用户的美国号码验证工具。支持闲鱼卡密、自动收码、倒计时换号、服务次数限制和订单追踪。
+面向终端用户的 SoulAPP 香港号码验证工具。支持闲鱼卡密、自动收码、倒计时换号、服务次数限制和订单追踪。号码通道使用 Grizzly SMS。
 
 ## 技术栈
 
@@ -28,8 +28,9 @@ copy .env.example .env.local
 
 - `SUPABASE_URL`
 - `SUPABASE_SECRET_KEY`（旧项目可改用 `SUPABASE_SERVICE_ROLE_KEY`）
-- `SMSMAN_API_TOKEN`
-- 国家及应用 ID
+- `GRIZZLY_API_KEY`
+- `GRIZZLY_COUNTRY_ID=14`（香港）
+- `GRIZZLY_SERVICE_CODE` 通常可留空，系统会通过官方 `getServicesList` 自动识别 SoulAPP
 
 ## 3. Admin 卡密与买家卡密
 
@@ -74,7 +75,7 @@ npm run dev -- -p 3100
 导入仓库，然后在 Settings → Environment Variables 中添加 `.env.example` 对应变量。
 
 Admin 页面、普通用户页面和所有 `/api` 接口都包含在同一个 Vercel 项目中；Supabase
-与 SMS-Man 作为外部服务由服务端环境变量连接。
+与 Grizzly SMS 作为外部服务由服务端环境变量连接。
 
 Vercel 环境变量还需要配置 `CLEANUP_SECRET`。部署得到正式域名后，替换
 `supabase/schedule-cleanup.sql` 中的域名和同一密钥，再在 Supabase SQL Editor 执行。
@@ -94,7 +95,7 @@ Supabase Cron 会每分钟调用清理接口。号码超过对应服务的等待
 ## 售卖规则
 
 - 一张普通卡密只能成功接收 1 次验证码。
-- ChatGPT 号码默认等待 3 分钟，SoulAPP 默认等待 10 分钟；普通卡密最多换 1 次，因此总共最多使用 2 个号码。
+- SoulAPP 香港号码默认等待 10 分钟；普通卡密最多换 1 次，因此总共最多使用 2 个号码。
 - 换号必须先成功 `reject` 旧号码，失败时不购买新号且不扣换号次数。
 - 页面每 8 秒自动查询验证码，“立即查询”只是额外手动查询。
 - 号码超过对应服务的等待时间仍未收到验证码时自动释放；第 1 个释放后由用户点击获取第 2 个，第 2 个释放后服务结束。

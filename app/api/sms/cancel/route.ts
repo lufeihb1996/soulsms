@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { apiError, asString, providerError } from "@/lib/http";
 import { findOrder } from "@/lib/orders";
-import { cancelOrder } from "@/lib/smsman";
+import { cancelOrder } from "@/lib/grizzly";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return apiError("登录状态已失效", 401, "unauthorized");
-  if (session.access.role !== "admin") return apiError("只有管理员可以切换进行中的服务", 403, "forbidden");
+  if (session.access.role !== "admin") return apiError("只有管理员可以结束进行中的订单", 403, "forbidden");
 
   let body: { id?: unknown } = {};
   try {

@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { getSms, markOrderUsed, rejectOrder } from "@/lib/smsman";
+import { getSms, markOrderUsed, rejectOrder } from "@/lib/grizzly";
 
 export interface ExpirableOrder {
   id: string;
