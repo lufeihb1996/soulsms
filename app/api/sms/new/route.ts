@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
         .eq("session_id", session.id);
       previous = await latestOrder(session.id);
     }
-    if (previous && ["waiting", "received", "swapping", "replacement_pending"].includes(previous.status)) {
+    if (previous && ["waiting", "swapping", "replacement_pending"].includes(previous.status)) {
       return NextResponse.json({
         ok: true,
         order: publicOrder(previous),

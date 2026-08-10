@@ -588,7 +588,7 @@ export default function Home() {
 
                 {order.code && access && access.remainingSuccesses > 0 && (
                   <button className="primary-button next-button" onClick={acquireNumber} disabled={busy}>
-                    继续下一次验证
+                    更换为新号码
                   </button>
                 )}
 
